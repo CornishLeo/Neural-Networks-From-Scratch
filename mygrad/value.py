@@ -27,18 +27,17 @@ class Value():
         for v in reversed(topo):
             v._backward()
 
-
     def tanh(self):
         out = Value(math.tanh(self.data), (self,), 'tanh')
 
         def _backward():
-            self.grad += (1 - out.data**2) * out.grad
+            self.grad += (1 - out.data**2.0) * out.grad
         out._backward = _backward
 
         return out
     
     def relu(self):
-        out = Value(0 if self.data < 0 else self.data, (self,), 'relu')
+        out = Value(0.0 if self.data < 0 else self.data, (self,), 'relu')
 
         def _backward():
             self.grad += (self.data > 0) * out.grad
@@ -46,6 +45,35 @@ class Value():
 
         return out
     
+    def leaky_relu(self, alpha=0.01):  # alpha is the slope for x < 0
+        out = Value(max(alpha * self.data, self.data), (self,), 'l_relu')
+
+        def _backward():
+            self.grad += (1.0 if self.data > 0 else alpha) * out.grad
+
+        out._backward = _backward
+        return out
+
+    
+    def exp(self):
+        out = Value(math.exp(self.data), (self,), 'exp')
+
+        def _backward():
+            self.grad += out.data * out.grad
+        out._backward = _backward
+
+        return out
+
+    def log(self):
+        # Natural log
+        out = Value(math.log(self.data), (self,), 'log')
+
+        def _backward():
+            self.grad += (1.0/self.data) * out.grad
+        out._backward = _backward
+
+        return out
+
     def __add__(self, other):
         if isinstance(other, (int, float)):
             other = Value(other)
@@ -93,7 +121,7 @@ class Value():
         out = Value(self.data**other.data, (self, other), "**")
 
         def _backward():
-            self.grad += other.data * self.data**(other.data - 1) * out.grad
+            self.grad += (other.data * self.data**(other.data - 1.0)) * out.grad
 
         out._backward = _backward
  
@@ -106,10 +134,22 @@ class Value():
         return self * Value(-1.0)
     
     def __sub__(self, other):          
-        return self.data + (-other)
+        return self + (-other)
     
+    def __rsub__(self, other):
+        return other + (-self)
+
+    def __rmul__(self, other):
+        return self * other
+
     def __truediv__(self, other):
-        return self * other**-1
+        return self * other**-1.0
+
+    def __rtruediv__(self, other):
+        return other * self**-1.0
     
     def __repr__(self):
         return f"Value(data={self.data}, grad={self.grad})"
+
+
+    
