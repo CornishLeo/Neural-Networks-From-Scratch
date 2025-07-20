@@ -1,15 +1,15 @@
 import csv
 import random
-from mygrad.nn import MLP
-from mygrad.utils import cross_entropy, max_index
+from puregrad.nn import MLP
+from puregrad.utils import cross_entropy, max_index, save_model
 
 # Hyperparameters
 train_split = 0.6
-lr = 0.005
-epochs = 1000
-hidden_sizes = [10] 
+lr = 0.01
+epochs = 200
+hidden_sizes = [10, 5] 
 
-# Get data from csv data 
+# Get data from csv data (https://gist.github.com/netj/8836201)
 with open('datasets/iris.csv', 'r') as read_obj: 
     csv_reader = csv.reader(read_obj) 
     list_of_csv = list(csv_reader) 
@@ -35,14 +35,16 @@ X = [row[:-1] for row in data]
 y = [row[-1] for row in data]
 
 # Collect class types and create conversion dicts
-classes = list(set(y))
+classes = sorted(list(set(y)))
 class_size = len(classes)
 class_2_int = {}
 int_2_class = {}
+
 for idx, flower in enumerate(classes):
     class_2_int[flower] = idx
     int_2_class[idx] = flower
-
+print("class to int")
+print(class_2_int)
 # Convert y to int values based on classes
 y = [class_2_int[a] for a in y]
 
@@ -100,5 +102,5 @@ for idx, score_idx in enumerate(test_score_idx):
         true_count += 1
 print(f"accuracy: {true_count / count}")
 
-
+save_model(model, "puregrad/models/iris_classifier")
 

@@ -65,11 +65,12 @@ class Value():
         return out
 
     def log(self):
-        # Natural log
-        out = Value(math.log(self.data), (self,), 'log')
+        epsilon = 1e-8  # Small constant
+        safe_data = max(self.data, epsilon)  # Avoid log(0) error
+        out = Value(math.log(safe_data), (self,), 'log')
 
         def _backward():
-            self.grad += (1.0/self.data) * out.grad
+            self.grad += (1.0 / safe_data) * out.grad
         out._backward = _backward
 
         return out
